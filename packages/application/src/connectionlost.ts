@@ -15,5 +15,6 @@ export const ConnectionLost: IConnectionLost = async function (
 ): Promise<void> {
   return new Promise((res, rej) => {
     /* do nothing */
+    console.log('Connection lost, check the status bar.');
   });
 };

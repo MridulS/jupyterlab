@@ -8,14 +8,11 @@
  */
 
 import {
-  ConnectionLost,
-  IConnectionLost,
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { Dialog, ICommandPalette, showDialog } from '@jupyterlab/apputils';
+import { ICommandPalette } from '@jupyterlab/apputils';
 import { URLExt } from '@jupyterlab/coreutils';
-import { ServerConnection, ServiceManager } from '@jupyterlab/services';
 import { ITranslator } from '@jupyterlab/translation';
 
 /**
@@ -114,66 +111,8 @@ const hubExtensionMenu: JupyterFrontEndPlugin<void> = {
   autoStart: true
 };
 
-/**
- * The default JupyterLab connection lost provider. This may be overridden
- * to provide custom behavior when a connection to the server is lost.
- *
- * If the application is being deployed within a JupyterHub context,
- * this will provide a dialog that prompts the user to restart the server.
- * Otherwise, it shows an error dialog.
- */
-const connectionlost: JupyterFrontEndPlugin<IConnectionLost> = {
-  id: '@jupyterlab/apputils-extension:connectionlost',
-  requires: [JupyterFrontEnd.IPaths, ITranslator],
-  activate: (
-    app: JupyterFrontEnd,
-    paths: JupyterFrontEnd.IPaths,
-    translator: ITranslator
-  ): IConnectionLost => {
-    const trans = translator.load('jupyterlab');
-    const hubPrefix = paths.urls.hubPrefix || '';
-    const baseUrl = paths.urls.base;
-
-    // Return the default error message if not running on JupyterHub.
-    if (!hubPrefix) {
-      return ConnectionLost;
-    }
-
-    // If we are running on JupyterHub, return a dialog
-    // that prompts the user to restart their server.
-    let showingError = false;
-    const onConnectionLost: IConnectionLost = async (
-      manager: ServiceManager.IManager,
-      err: ServerConnection.NetworkError
-    ): Promise<void> => {
-      if (showingError) {
-        return;
-      }
-      showingError = true;
-      const result = await showDialog({
-        title: trans.__('Server unavailable or unreachable'),
-        body: trans.__(
-          'Your server at %1 is not running.\nWould you like to restart it?',
-          baseUrl
-        ),
-        buttons: [
-          Dialog.okButton({ label: trans.__('Restart') }),
-          Dialog.cancelButton({ label: trans.__('Dismiss') })
-        ]
-      });
-      showingError = false;
-      if (result.button.accept) {
-        await app.commands.execute(CommandIDs.restart);
-      }
-    };
-    return onConnectionLost;
-  },
-  autoStart: true,
-  provides: IConnectionLost
-};
 
 export default [
   hubExtension,
   hubExtensionMenu,
-  connectionlost
 ] as JupyterFrontEndPlugin<any>[];
