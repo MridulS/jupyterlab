@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { ServerConnection, ServiceManager } from '@jupyterlab/services';
-import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+import { ITranslator } from '@jupyterlab/translation';
 import { IConnectionLost } from './tokens';
 
 /**
