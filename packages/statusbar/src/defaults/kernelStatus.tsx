@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { ISessionContext, VDomModel, VDomRenderer } from '@jupyterlab/apputils';
-import { Session } from '@jupyterlab/services';
+import { Session, Kernel } from '@jupyterlab/services';
 import {
   ITranslator,
   nullTranslator,
@@ -29,6 +29,7 @@ function KernelStatusComponent(
       onClick={props.handleClick}
       source={`${props.kernelName}${statusText}`}
       title={trans.__('Change kernel for %1', props.activityName)}
+      className={props.classes.join(' ')}
     />
   );
 }
@@ -61,6 +62,8 @@ namespace KernelStatusComponent {
      * The status of the kernel.
      */
     status?: string;
+
+    classes: string[];
 
     /**
      * The application language translator.
@@ -96,6 +99,7 @@ export class KernelStatus extends VDomRenderer<KernelStatus.Model> {
           kernelName={this.model.kernelName}
           activityName={this.model.activityName}
           handleClick={this._handleClick}
+          classes={this.model.classes}
           translator={this.translator}
         />
       );
@@ -194,6 +198,21 @@ export namespace KernelStatus {
       this._triggerChange(oldState, this._getAllState());
     }
 
+    get classes(): string[] {
+      let extra_classes = [];
+      if (typeof this.status === 'string') {
+        if (
+          this._CiriticalKernelStatus.includes(this.status as Kernel.Status)
+        ) {
+          extra_classes.push('kernel-status-critical');
+        }
+        if (this.status === 'connecting') {
+          extra_classes.push('waiting-dots');
+        }
+      }
+      return extra_classes;
+    }
+
     /**
      * React to changes to the kernel status.
      */
@@ -233,6 +252,12 @@ export namespace KernelStatus {
     private _kernelName: string; // Initialized in constructor due to localization
     private _kernelStatus: ISessionContext.KernelDisplayStatus | undefined = '';
     private _sessionContext: ISessionContext | null = null;
+    private _CiriticalKernelStatus: ISessionContext.KernelDisplayStatus[] = [
+      'disconnected',
+      'connecting',
+      'dead',
+      'unknown'
+    ];
     private readonly _statusNames: Record<
       ISessionContext.KernelDisplayStatus,
       string
